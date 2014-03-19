@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">AiLight</string>
+    <string name="action_settings">Settings</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="switch_btn">Switch</string>
+    <string name="connected_status">Connected Status</string>
+    <string name="refresh_btn">Refresh</string>
+</resources>
