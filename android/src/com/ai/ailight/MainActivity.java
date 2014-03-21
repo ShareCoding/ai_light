@@ -1,12 +1,20 @@
 package com.ai.ailight;
 
+import java.util.Set;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
+import android.graphics.Color;
 import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -19,7 +27,12 @@ public class MainActivity extends Activity {
 	private Button   switch_btn  = null;
 	private TextView connected_status   = null;
 	
-	private static final int kBtEnableReq = 1;
+	BroadcastReceiver mReceiver = null;
+	
+	private static final int kBtEnableReq   = 1;
+	private static final int kBtDiscoverReq = 2;
+	
+	private View previous = null;
 	
 	
     @Override
@@ -34,6 +47,38 @@ public class MainActivity extends Activity {
         
         device_adapter = new DeviceListAdapter(this);
         device_list.setAdapter(device_adapter);
+        
+        device_list.setOnItemClickListener(new OnItemClickListener(){
+
+			@Override
+			public void onItemClick(AdapterView<?> arg0, View v, int arg2,
+					long arg3) {
+				// TODO Auto-generated method stub
+				if (previous != null){
+					previous.setBackgroundColor(Color.TRANSPARENT);
+				}
+				previous = v;
+				v.setSelected(true);
+				v.setBackgroundColor(Color.LTGRAY);
+			}});
+        
+        
+        mReceiver = new BroadcastReceiver() {
+            public void onReceive(Context context, Intent intent) {
+                String action = intent.getAction();
+                // When discovery finds a device
+                if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+                    // Get the BluetoothDevice object from the Intent
+                    BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                    // Add the name and address to an array adapter to show in a ListView
+                    device_adapter.addDevice(device);
+                    device_adapter.notifyDataSetChanged();
+                }
+            }
+        };
+        // Register the BroadcastReceiver
+        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+        registerReceiver(mReceiver, filter); // Don't forget to unregister during onDestroy
         
         // refresh in order to get bluetooth device list
         refresh_btn.setOnClickListener(new OnClickListener(){
@@ -51,7 +96,25 @@ public class MainActivity extends Activity {
 				    Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
 				    startActivityForResult(enableBtIntent, kBtEnableReq);
 				}
+				device_adapter.clearDevice();
+				Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
+				// If there are paired devices
+				if (pairedDevices.size() > 0) {
+				    // Loop through paired devices
+				    for (BluetoothDevice device : pairedDevices) {
+				        // Add the name and address to an array adapter to show in a ListView
+				    	device_adapter.addDevice(device);
+				    	device_adapter.notifyDataSetChanged();
+				    }
+				}
 				
+				if (mBluetoothAdapter.isDiscovering()){
+					mBluetoothAdapter.cancelDiscovery();
+				}
+				
+                IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND); 
+                registerReceiver(mReceiver, filter); 
+                mBluetoothAdapter.startDiscovery();
 			}});
         
         // to switch light on/off
@@ -67,6 +130,9 @@ public class MainActivity extends Activity {
     }
 
 
+    //private void 
+    
+    
     @Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		if (requestCode == kBtEnableReq){
@@ -77,6 +143,14 @@ public class MainActivity extends Activity {
 			}
 		}
 		super.onActivityResult(requestCode, resultCode, data);
+	}
+
+
+	@Override
+	protected void onDestroy() {
+		// TODO Auto-generated method stub
+		unregisterReceiver(mReceiver);
+		super.onDestroy();
 	}
 
 

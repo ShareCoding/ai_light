@@ -20,7 +20,6 @@ public class DeviceListAdapter extends BaseAdapter{
 		mContext = context;
 	}
 	
-	
 	public void addDevice(BluetoothDevice bd){
 		if (bd == null)
 			return;
@@ -50,14 +49,16 @@ public class DeviceListAdapter extends BaseAdapter{
 	}
 
 	@Override
-	public View getView(int arg0, View arg1, ViewGroup arg2) {
+	public View getView(int arg0, View v, ViewGroup arg2) {
 		// TODO Auto-generated method stub
-		TextView tv = new TextView(mContext);
-		tv.setText("Bluetooth device");
+		if (v == null){
+		    v = new TextView(mContext);
+		}
+		TextView tv = (TextView)v;
+		BluetoothDevice dv = device_list.get(arg0);
+		tv.setText(dv.getAddress());
 		return tv;
 	}
-	
-	
 	
 }
 
