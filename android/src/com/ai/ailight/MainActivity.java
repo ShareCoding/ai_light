@@ -24,13 +24,21 @@ public class MainActivity extends Activity {
 	private DeviceListAdapter device_adapter = null;
 	private ListView device_list = null;
 	private Button   refresh_btn = null;
+	private Button   connect_btn = null;
 	private Button   switch_btn  = null;
 	private TextView connected_status   = null;
+	private TextView board = null;
 	
-	BroadcastReceiver mReceiver = null;
+	private BroadcastReceiver mReceiver = null;
+	
+	private BluetoothAdapter mBluetoothAdapter = null;
 	
 	private static final int kBtEnableReq   = 1;
-	private static final int kBtDiscoverReq = 2;
+	//private static final int kBtDiscoverReq = 2;
+	
+	
+	private BluetoothUnit selected_bluetooth = new BluetoothUnit();
+	
 	
 	private View previous = null;
 	
@@ -42,16 +50,18 @@ public class MainActivity extends Activity {
         View v = getLayoutInflater().inflate(R.layout.activity_main, null);
         device_list = (ListView)v.findViewById(R.id.device_list);
         refresh_btn = (Button)v.findViewById(R.id.refresh);
+        connect_btn = (Button)v.findViewById(R.id.connect_btn);
         switch_btn = (Button)v.findViewById(R.id.switch_button);
         connected_status = (TextView)v.findViewById(R.id.connected_status);
-        
+        board = (TextView)v.findViewById(R.id.board);
+        selected_bluetooth.mStatusLabel = connected_status;
         device_adapter = new DeviceListAdapter(this);
         device_list.setAdapter(device_adapter);
         
         device_list.setOnItemClickListener(new OnItemClickListener(){
 
 			@Override
-			public void onItemClick(AdapterView<?> arg0, View v, int arg2,
+			public void onItemClick(AdapterView<?> arg0, View v, int pos,
 					long arg3) {
 				// TODO Auto-generated method stub
 				if (previous != null){
@@ -59,6 +69,7 @@ public class MainActivity extends Activity {
 				}
 				previous = v;
 				v.setSelected(true);
+				selected_bluetooth.mDevice = (BluetoothDevice)device_adapter.getItem(pos);
 				v.setBackgroundColor(Color.LTGRAY);
 			}});
         
@@ -86,7 +97,7 @@ public class MainActivity extends Activity {
 			@Override
 			public void onClick(View arg0) {
 				// TODO Auto-generated method stub
-				BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+				mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 				if (mBluetoothAdapter == null) {
 				    // Device does not support Bluetooth
 					connected_status.setText("Bluetooth not supported");
@@ -117,13 +128,27 @@ public class MainActivity extends Activity {
                 mBluetoothAdapter.startDiscovery();
 			}});
         
+        connect_btn.setOnClickListener(new OnClickListener(){
+
+			@Override
+			public void onClick(View arg0) {
+				// TODO Auto-generated method stub
+				selected_bluetooth.mBtAdapter = mBluetoothAdapter;
+				selected_bluetooth.mStatusLabel = connected_status;
+				new ConnectBtTask().execute(selected_bluetooth);
+			}});
+        
+        
+        
         // to switch light on/off
         switch_btn.setOnClickListener(new OnClickListener(){
 
 			@Override
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
-				
+				selected_bluetooth.mBtAdapter = mBluetoothAdapter;
+				selected_bluetooth.mStatusLabel = board;
+				new BtSwitchTask().execute(selected_bluetooth);
 			}});
         
         setContentView(v);

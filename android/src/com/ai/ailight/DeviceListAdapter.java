@@ -5,6 +5,7 @@ import java.util.List;
 
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
+import android.graphics.Color;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -39,7 +40,7 @@ public class DeviceListAdapter extends BaseAdapter{
 	@Override
 	public Object getItem(int arg0) {
 		// TODO Auto-generated method stub
-		return null;
+		return device_list.get(arg0);
 	}
 
 	@Override
@@ -55,8 +56,9 @@ public class DeviceListAdapter extends BaseAdapter{
 		    v = new TextView(mContext);
 		}
 		TextView tv = (TextView)v;
+		tv.setBackgroundColor(Color.TRANSPARENT);
 		BluetoothDevice dv = device_list.get(arg0);
-		tv.setText(dv.getAddress());
+		tv.setText(dv.getName() + " : " + dv.getAddress());
 		return tv;
 	}
 	
